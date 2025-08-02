@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🎓 Gestión Universitaria</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: #eaf0f6;
+      color: #222;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: auto;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0a2240;
+      margin-bottom: 40px;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+      color: #0a2240;
+    }
+
+    select, textarea, input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .url-text {
+      font-family: monospace;
+      background: #f5f5f5;
+      padding: 8px 12px;
+      border-left: 4px solid #0a2240;
+      margin-bottom: 10px;
+      color: #333;
+      border-radius: 6px;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid #d1d5db;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+    }
+
+    button {
+      background-color: #0a2240;
+      color: #fff;
+      font-weight: bold;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #143a6f;
+    }
+
+    .data-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .data-list li {
+      background: #fff;
+      margin-bottom: 8px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: monospace;
+    }
+
+    .response {
+      background: #f9f9f9;
+      border: 1px dashed #aaa;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      margin-top: 10px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Sistema</h1>
+
+    <div class="form-group">
+      <label>Selecciona el tipo:</label>
+      <select id="tipoEntidad">
+        <option value="alumno"> Alumno</option>
+        <option value="catedratico">Catedrático</option>
+      </select>
+    </div>
+
+    <!-- POST -->
+    <div class="card">
+      <label>POST - Agregar nuevo</label>
+      <div class="url-text" id="urlPost"></div>
+      <textarea id="postData"></textarea>
+      <button onclick="enviarPost()">+ Enviar POST</button>
+    </div>
+
+    <!-- GET -->
+    <div class="card">
+      <label>GET - Obtener todos</label>
+      <div class="url-text" id="urlGet"></div>
+      <button onclick="enviarGet()">🔍 Enviar GET</button>
+      <div id="dataList" class="data-list" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- PUT -->
+    <div class="card">
+      <label>PUT - Actualizar</label>
+      <div class="url-text" id="urlPut"></div>
+      <textarea id="putData"></textarea>
+      <button onclick="enviarPut()">✏️ Enviar PUT</button>
+    </div>
+
+    <!-- DELETE -->
+    <div class="card">
+      <label>DELETE - ID a eliminar</label>
+      <div class="url-text" id="urlDelete"></div>
+      <input id="deleteId" type="number" placeholder="Escribe el ID del registro a eliminar" />
+      <button onclick="enviarDelete()">🗑️ Enviar DELETE</button>
+    </div>
+
+    <!-- RESPUESTA GENERAL -->
+    <div class="card">
+      <label>Respuesta general:</label>
+      <div id="respuesta" class="response">Esperando acción...</div>
+    </div>
+  </div>
+
+  <script>
+    const baseURL = 'http://localhost/USPG/index.php';
+
+    function getTipo() {
+      return document.getElementById('tipoEntidad').value;
+    }
+
+    function actualizarURLs() {
+      const tipo = getTipo();
+      document.getElementById('urlPost').textContent = `${baseURL}?tipo=${tipo}`;
+      document.getElementById('urlGet').textContent = `${baseURL}?tipo=${tipo}`;
+      document.getElementById('urlPut').textContent = `${baseURL}?tipo=${tipo}`;
+      document.getElementById('urlDelete').textContent = `${baseURL}?tipo=${tipo}&id={ID}`;
+
+      const postData = document.getElementById('postData');
+      const putData = document.getElementById('putData');
+
+      if (tipo === 'alumno') {
+        postData.value =
+`{
+  "nombre": "",
+  "carnet": "",
+  "carrera": "",
+  "fecha_ingreso": "2025-08-01"
+}`;
+        putData.value =
+`{
+  "id": 1,
+  "nombre": "Actualizado",
+  "carnet": "000000",
+  "carrera": "Ingeniería",
+  "fecha_ingreso": "2025-08-01"
+}`;
+      } else {
+        postData.value =
+`{
+  "nombre": "",
+  "especialidad": "",
+  "correo": ""
+}`;
+        putData.value =
+`{
+  "id": 1,
+  "nombre": "Catedrático Actualizado",
+  "especialidad": "Matemática",
+  "correo": "ejemplo@uspg.edu"
+}`;
+      }
+    }
+
+    window.onload = actualizarURLs;
+    document.getElementById('tipoEntidad').addEventListener('change', actualizarURLs);
+
+    function mostrarRespuesta(data) {
+      document.getElementById('respuesta').textContent =
+        typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+    }
+
+    async function enviarPost() {
+      try {
+        const body = JSON.parse(document.getElementById('postData').value);
+        const res = await fetch(`${baseURL}?tipo=${getTipo()}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        mostrarRespuesta(await res.json());
+      } catch {
+        mostrarRespuesta('❌ Error al enviar POST');
+      }
+    }
+
+    async function enviarGet() {
+      try {
+        const res = await fetch(`${baseURL}?tipo=${getTipo()}`);
+        const data = await res.json();
+        mostrarRespuesta(data);
+        const list = document.getElementById('dataList');
+        list.innerHTML = '';
+        if (Array.isArray(data)) {
+          const ul = document.createElement('ul');
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(' | ');
+            ul.appendChild(li);
+          });
+          list.appendChild(ul);
+        } else {
+          list.textContent = '⚠️ No se pudo obtener una lista válida.';
+        }
+      } catch {
+        mostrarRespuesta('❌ Error al enviar GET');
+      }
+    }
+
+    async function enviarPut() {
+      try {
+        const body = JSON.parse(document.getElementById('putData').value);
+        const res = await fetch(`${baseURL}?tipo=${getTipo()}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        mostrarRespuesta(await res.json());
+      } catch {
+        mostrarRespuesta('❌ Error al enviar PUT');
+      }
+    }
+
+    async function enviarDelete() {
+      const id = document.getElementById('deleteId').value;
+      if (!id) return alert('Escribe un ID');
+      try {
+        const res = await fetch(`${baseURL}?tipo=${getTipo()}&id=${id}`, {
+          method: 'DELETE'
+        });
+        mostrarRespuesta(await res.json());
+      } catch {
+        mostrarRespuesta('❌ Error al enviar DELETE');
+      }
+    }
+  </script>
+</body>
+</html>
